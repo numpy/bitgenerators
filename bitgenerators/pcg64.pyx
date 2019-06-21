@@ -1,12 +1,12 @@
 import numpy as np
 cimport numpy as np
 
-from .common cimport *
-from .bit_generator cimport BitGenerator
+from numpy.random.common cimport *
+from numpy.random.bit_generator cimport BitGenerator
 
 __all__ = ['PCG64']
 
-cdef extern from "src/pcg64/pcg64.h":
+cdef extern from "../src/pcg64/pcg64.h":
     # Use int as generic type, actual type read from pcg64.h and is platform dependent
     ctypedef int pcg64_random_t
 

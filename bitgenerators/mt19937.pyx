@@ -3,9 +3,9 @@ import operator
 import numpy as np
 cimport numpy as np
 
-from .common cimport *
-from .bit_generator cimport BitGenerator, SeedSequence
-from .entropy import random_entropy
+from numpy.random.common cimport *
+from numpy.random.bit_generator cimport BitGenerator, SeedSequence
+from numpy.random.entropy import random_entropy
 
 __all__ = ['MT19937']
 
@@ -25,6 +25,9 @@ cdef extern from "src/mt19937/mt19937.h":
     void mt19937_init_by_array(mt19937_state *state, uint32_t *init_key, int key_length)
     void mt19937_seed(mt19937_state *state, uint32_t seed)
     void mt19937_jump(mt19937_state *state)
+    
+    enum:
+        RK_STATE_LEN
 
 cdef uint64_t mt19937_uint64(void *st) nogil:
     return mt19937_next64(<mt19937_state *> st)
@@ -131,19 +134,27 @@ cdef class MT19937(BitGenerator):
 
     def __init__(self, seed=None):
         BitGenerator.__init__(self, seed)
-        self.seed(seed)
-
+        if isinstance(seed, SeedSequence):
+            val = self._seed_seq.generate_state(RK_STATE_LEN, np.uint32)
+            # MSB is 1; assuring non-zero initial array
+            self.rng_state.key[0] = 0x80000000UL 
+            for i in range(1, RK_STATE_LEN):
+                self.rng_state.key[i] = val[i]
+            self.rng_state.pos = i
+        else:
+            self.legacy_seeding(seed)
         self._bitgen.state = &self.rng_state
         self._bitgen.next_uint64 = &mt19937_uint64
         self._bitgen.next_uint32 = &mt19937_uint32
         self._bitgen.next_double = &mt19937_double
         self._bitgen.next_raw = &mt19937_raw
 
-    def seed(self, seed=None):
+    def legacy_seeding(self, seed=None):
         """
-        seed(seed=None)
+        legacy_seeding(seed=None)
 
-        Seed the generator.
+        Seed the generator in a backward compatible way. For modern
+        applications, MT19937(SeedGenerator(seed)) is preferable.
 
         Parameters
         ----------
@@ -170,9 +181,6 @@ cdef class MT19937(BitGenerator):
                     except RuntimeError:
                         seed = random_entropy(1, 'fallback')
                     mt19937_seed(&self.rng_state, seed[0])
-                elif isinstance(seed, SeedSequence):
-                    val = self._seed_seq.generate_state(8, np.uint32)
-                    mt19937_seed(&self.rng_state, val[0])
                 else:
                     if hasattr(seed, 'squeeze'):
                         seed = seed.squeeze()

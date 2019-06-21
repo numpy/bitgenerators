@@ -3,9 +3,8 @@ import operator
 import numpy as np
 cimport numpy as np
 
-from .common cimport *
-from .bit_generator cimport BitGenerator
-from .entropy import random_entropy
+from numpy.random.common cimport *
+from numpy.random.bit_generator cimport BitGenerator
 
 __all__ = ['DSFMT']
 
@@ -125,8 +124,7 @@ cdef class DSFMT(BitGenerator):
     generators should be chained to ensure that the segments come from the same
     sequence.
 
-    >>> from numpy.random.entropy import random_entropy
-    >>> from numpy.random import Generator, DSFMT
+    >>> from numpy.random import Generator, DSFMT, SeedSequence
     >>> seed_seq = SeedSequence()
     >>> bit_generator = DSFMT(seed_seq)
     >>> rg = []
@@ -134,6 +132,14 @@ cdef class DSFMT(BitGenerator):
     ...    rg.append(Generator(bit_generator))
     ...    # Chain the BitGenerators
     ...    bit_generator = bit_generator.jumped()
+
+    It is not recommended to re-jump a BitGenerator as that may lead to bugs
+
+    >>> bit_generator = DSFMT(seed_seq)
+    >>> badbadbad = [Generator(bit_generator.jumped(i)) for i in range(1, 11)]
+
+    While this is OK in and of itself, now you must remember the next call to
+    `jumped` must start with ``i=11`
 
     **Compatibility Guarantee**
 

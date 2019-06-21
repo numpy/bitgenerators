@@ -1,15 +1,15 @@
 import numpy as np
 cimport numpy as np
 
-from .common cimport *
+from numpy.random.common cimport *
 
-from .bit_generator cimport BitGenerator
+from numpy.random.bit_generator cimport BitGenerator
 
 __all__ = ['PCG32']
 
 np.import_array()
 
-cdef extern from "src/pcg32/pcg32.h":
+cdef extern from "../src/pcg32/pcg32.h":
 
     cdef struct pcg_state_setseq_64:
         uint64_t state

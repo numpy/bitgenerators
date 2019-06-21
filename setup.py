@@ -125,6 +125,18 @@ def read(*names, **kwargs):
     ) as fh:
         return fh.read()
 
+# enable unix large file support on 32 bit systems
+# (64 bit off_t, lseek -> lseek64 etc.)
+if sys.platform[:3] == "aix":
+    defs = [('_LARGE_FILES', None)]
+else:
+    defs = [('_FILE_OFFSET_BITS', '64'),
+            ('_LARGEFILE_SOURCE', '1'),
+            ('_LARGEFILE64_SOURCE', '1')]
+
+defs.append(('NPY_NO_DEPRECATED_API', 0))
+defs.append(('PCG_FORCE_EMULATED_128BIT_MATH', '1'))
+
 setup(
     name='bitgenerators',
     version='0.0.0',
@@ -166,7 +178,8 @@ setup(
         Extension(
             splitext(relpath(path, 'bitgenerators').replace(os.sep, '.'))[0],
             sources=[path],
-            include_dirs=[dirname(path)]
+            include_dirs=[dirname(path), '.'],
+            define_macros=defs,
         )
         for root, _, _ in os.walk('bitgenerators')
         for path in glob(join(root, '*.pyx' if Cython else '*.c'))

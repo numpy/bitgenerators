@@ -8,9 +8,8 @@ from cpython.pycapsule cimport PyCapsule_New
 import numpy as np
 cimport numpy as np
 
-from .common cimport *
-from .distributions cimport bitgen_t
-from .entropy import random_entropy, seed_by_array
+from numpy.random.common cimport *
+from numpy.random.entropy import random_entropy, seed_by_array
 
 __all__ = ['Xoshiro256']
 
