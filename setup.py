@@ -16,17 +16,14 @@ import sys
 import os
 import re
 import io
+import platform
 from glob import glob
-from os.path import basename
-from os.path import dirname
-from os.path import join
-from os.path import relpath
-from os.path import splitext
+from os.path import (basename, dirname, join, relpath, splitext)
 
-from setuptools import Extension
-from setuptools import find_packages
-from setuptools import setup
+from setuptools import Extension, find_packages, setup
+from numpy.distutils.system_info import platform_bits
 
+import Cython
 
 if sys.version_info[:2] < (3, 6):
     raise RuntimeError("Python version >= 3.6 required.")
@@ -111,12 +108,6 @@ if not release:
     finally:
         a.close()
 
-try:
-    # Allow installing package without any Cython available. This
-    # assumes you are going to include the .c files in your sdist.
-    import Cython
-except ImportError:
-    Cython = None
 
 def read(*names, **kwargs):
     with io.open(
@@ -124,6 +115,9 @@ def read(*names, **kwargs):
         encoding=kwargs.get('encoding', 'utf8')
     ) as fh:
         return fh.read()
+
+is_msvc = (platform.platform().startswith('Windows') and
+           platform.python_compiler().startswith('MS'))
 
 # enable unix large file support on 32 bit systems
 # (64 bit off_t, lseek -> lseek64 etc.)
@@ -136,6 +130,51 @@ else:
 
 defs.append(('NPY_NO_DEPRECATED_API', 0))
 defs.append(('PCG_FORCE_EMULATED_128BIT_MATH', '1'))
+
+EXTRA_LIBRARIES = ['m'] if os.name != 'nt' else []
+EXTRA_COMPILE_ARGS = ['-U__GNUC_GNU_INLINE__']
+
+if is_msvc and platform_bits == 32:
+    # 32-bit windows requires explicit sse2 option
+    EXTRA_COMPILE_ARGS += ['/arch:SSE2']
+elif not is_msvc:
+    # Some bit generators require c99
+    EXTRA_COMPILE_ARGS += ['-std=c99']
+    INTEL_LIKE = any([val in k.lower() for k in platform.uname()
+                      for val in ('x86', 'i686', 'i386', 'amd64')])
+    if INTEL_LIKE:
+        # Assumes GCC or GCC-like compiler
+        EXTRA_COMPILE_ARGS += ['-msse2']
+
+
+extensions = []
+
+for gen in ['mt19937', 'dsfmt']:
+    # gen.pyx, src/gen/gen.c, src/gen/gen-jump.c
+    extensions.append(Extension(gen,
+                         sources=['bitgenerators/{0}.pyx'.format(gen),
+                                  'src/{0}/{0}.c'.format(gen),
+                                  'src/{0}/{0}-jump.c'.format(gen)],
+                         include_dirs=['.', 'src', join('src', gen)],
+                         libraries=EXTRA_LIBRARIES,
+                         extra_compile_args=EXTRA_COMPILE_ARGS,
+                         depends=['%s.pyx' % gen],
+                         define_macros=defs,
+                     ))
+for gen in ['philox', 'threefry', 'xoshiro256', 'xoshiro512',
+            'pcg64', 'pcg32']:
+    # gen.pyx, src/gen/gen.c
+    extensions.append(Extension(gen,
+                         sources=['bitgenerators/{0}.pyx'.format(gen),
+                                  'src/{0}/{0}.c'.format(gen)],
+                         include_dirs=['.', 'src', join('src', gen)],
+                         libraries=EXTRA_LIBRARIES,
+                         extra_compile_args=EXTRA_COMPILE_ARGS,
+                         depends=['%s.pyx' % gen, 'bit_generator.pyx',
+                                  'bit_generator.pxd'],
+                         define_macros=defs,
+                     ))
+
 
 setup(
     name='bitgenerators',
@@ -173,15 +212,6 @@ setup(
     },
     setup_requires=[
         'cython',
-    ] if Cython else [],
-    ext_modules=[
-        Extension(
-            splitext(relpath(path, 'bitgenerators').replace(os.sep, '.'))[0],
-            sources=[path],
-            include_dirs=[dirname(path), '.'],
-            define_macros=defs,
-        )
-        for root, _, _ in os.walk('bitgenerators')
-        for path in glob(join(root, '*.pyx' if Cython else '*.c'))
     ],
+    ext_modules=extensions,
 )

@@ -1,5 +1,5 @@
 /**
- * @file dSFMT-jump.c
+ * @file dsfmt-jump.c
  *
  * @brief do jump using jump polynomial.
  *
@@ -18,10 +18,10 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-#include "dSFMT-params.h"
-#include "dSFMT.h"
-#include "dSFMT-jump.h"
-#include "dSFMT-common.h"
+#include "dsfmt-params.h"
+#include "dsfmt.h"
+#include "dsfmt-jump.h"
+#include "dsfmt-common.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -104,7 +104,7 @@ extern "C" {
 
 /**
  * calculate next state
- * @param dsfmt dSFMT internal state
+ * @param dsfmt dsfmt internal state
  */
     inline static void next_state(dsfmt_t * dsfmt) {
 	int idx = (dsfmt->idx / 2) % DSFMT_N;
@@ -143,7 +143,7 @@ extern "C" {
 
 /**
  * jump ahead using jump_string
- * @param dsfmt dSFMT internal state input and output.
+ * @param dsfmt dsfmt internal state input and output.
  * @param jump_string string which represents jump polynomial.
  */
     void dSFMT_jump(dsfmt_t * dsfmt, const char * jump_string) {

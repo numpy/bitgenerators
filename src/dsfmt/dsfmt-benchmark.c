@@ -1,14 +1,14 @@
 /*
  *
- * cl dsfmt-benchmark.c dSFMT.c /Ox -DHAVE_SSE2
+ * cl dsfmt-benchmark.c dsfmt.c /Ox -DHAVE_SSE2
  *
- * gcc dSFMT-benchmark.c dSFMT.c -O3 -DHAVE_SSE2 -DDSFMT_MEXP=19937 -o
+ * gcc dsfmt-benchmark.c dsfmt.c -O3 -DHAVE_SSE2 -DDSFMT_MEXP=19937 -o
  * dSFMT-benchmark
  */
 #include <inttypes.h>
 #include <time.h>
 
-#include "dSFMT.h"
+#include "dsfmt.h"
 
 
 #define N 1000000000

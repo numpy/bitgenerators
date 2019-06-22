@@ -2,7 +2,7 @@
 #ifndef DSFMT_CALC_JUMP_HPP
 #define DSFMT_CALC_JUMP_HPP
 /**
- * @file dSFMT-calc-jump.hpp
+ * @file dsfmt-calc-jump.hpp
  *
  * @brief functions for calculating jump polynomial.
  *

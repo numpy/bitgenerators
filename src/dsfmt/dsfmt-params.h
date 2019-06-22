@@ -1,11 +1,11 @@
 #ifndef DSFMT_PARAMS_H
 #define DSFMT_PARAMS_H
 
-#include "dSFMT.h"
+#include "dsfmt.h"
 
 /*----------------------
   the parameters of DSFMT
-  following definitions are in dSFMT-paramsXXXX.h file.
+  following definitions are in dsfmt-paramsXXXX.h file.
   ----------------------*/
 /** the pick up position of the array.
 #define DSFMT_POS1 122 
@@ -55,25 +55,25 @@
 #endif
 
 #if DSFMT_MEXP == 521
-  #include "dSFMT-params521.h"
+  #include "dsfmt-params521.h"
 #elif DSFMT_MEXP == 1279
-  #include "dSFMT-params1279.h"
+  #include "dsfmt-params1279.h"
 #elif DSFMT_MEXP == 2203
-  #include "dSFMT-params2203.h"
+  #include "dsfmt-params2203.h"
 #elif DSFMT_MEXP == 4253
-  #include "dSFMT-params4253.h"
+  #include "dsfmt-params4253.h"
 #elif DSFMT_MEXP == 11213
-  #include "dSFMT-params11213.h"
+  #include "dsfmt-params11213.h"
 #elif DSFMT_MEXP == 19937
-  #include "dSFMT-params19937.h"
+  #include "dsfmt-params19937.h"
 #elif DSFMT_MEXP == 44497
-  #include "dSFMT-params44497.h"
+  #include "dsfmt-params44497.h"
 #elif DSFMT_MEXP == 86243
-  #include "dSFMT-params86243.h"
+  #include "dsfmt-params86243.h"
 #elif DSFMT_MEXP == 132049
-  #include "dSFMT-params132049.h"
+  #include "dsfmt-params132049.h"
 #elif DSFMT_MEXP == 216091
-  #include "dSFMT-params216091.h"
+  #include "dsfmt-params216091.h"
 #else
 #ifdef __GNUC__
   #error "DSFMT_MEXP is not valid."

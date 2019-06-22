@@ -31,7 +31,7 @@
 #include <NTL/GF2X.h>
 #include <NTL/vec_GF2.h>
 #include <NTL/ZZ.h>
-#include "dSFMT-calc-jump.hpp"
+#include "dsfmt-calc-jump.hpp"
 
 using namespace NTL;
 using namespace std;

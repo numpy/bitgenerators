@@ -1,13 +1,13 @@
 /*
- * cl dSFMT-test-gen.c dSFMT.c -DHAVE_SSE2 -DDSFMT_MEXP=19937 /Ox
+ * cl dsfmt-test-gen.c dSFMT.c -DHAVE_SSE2 -DDSFMT_MEXP=19937 /Ox
  *
- * gcc dSFMT-test-gen.c dSFMT.c -DHAVE_SSE2 -DDSFMT_MEXP=19937 -o dSFMT
+ * gcc dsfmt-test-gen.c dSFMT.c -DHAVE_SSE2 -DDSFMT_MEXP=19937 -o dSFMT
  */
 
 #include <inttypes.h>
 #include <stdio.h>
 
-#include "dSFMT.h"
+#include "dsfmt.h"
 
 
 int main(void) {
