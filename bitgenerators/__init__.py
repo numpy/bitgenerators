@@ -47,4 +47,16 @@ from .xoshiro512 import Xoshiro512
 __all__ = ['MT19937', 'DSFMT', 'Philox', 'PCG64', 'PCG32', 'ThreeFry',
             'Xoshiro256', 'Xoshiro512']
 
+# register the bit generators for pickling
 
+import numpy.random._pickle
+numpy.random._pickle.BitGenerators.update({
+        'MT19937': MT19937,
+        'DSFMT': DSFMT,
+        'PCG32': PCG32,
+        'PCG64': PCG64,
+        'Philox': Philox,
+        'ThreeFry': ThreeFry,
+        'Xoshiro256': Xoshiro256,
+        'Xoshiro512': Xoshiro512
+    })
