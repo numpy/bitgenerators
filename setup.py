@@ -128,8 +128,9 @@ else:
             ('_LARGEFILE_SOURCE', '1'),
             ('_LARGEFILE64_SOURCE', '1')]
 
-defs.append(('NPY_NO_DEPRECATED_API', 0))
+defs.append(('NPY_NO_DEPRECATED_API', 'NPY_1_7_API_VERSION'))
 defs.append(('PCG_FORCE_EMULATED_128BIT_MATH', '1'))
+defs.append(('DSFMT_MEXP', '19937'))
 
 EXTRA_LIBRARIES = ['m'] if os.name != 'nt' else []
 EXTRA_COMPILE_ARGS = ['-U__GNUC_GNU_INLINE__']

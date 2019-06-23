@@ -6,7 +6,7 @@ from numpy.testing import (assert_equal, assert_allclose, assert_array_equal,
                            assert_raises)
 import pytest
 
-from numpy.random import Generator
+from numpy.random import Generator, RandomState
 from bitgenerators import (MT19937, ThreeFry, PCG32, PCG64, DSFMT,
                           Philox, Xoshiro256, Xoshiro512)
 
@@ -38,7 +38,6 @@ def assert_state_equal(actual, target):
         else:
             assert actual[key] == target[key]
 
-
 def uniform32_from_uint64(x):
     x = np.uint64(x)
     upper = np.array(x >> np.uint64(32), dtype=np.uint32)
@@ -48,17 +47,14 @@ def uniform32_from_uint64(x):
     out = (joined >> np.uint32(9)) * (1.0 / 2 ** 23)
     return out.astype(np.float32)
 
-
 def uniform32_from_uint53(x):
     x = np.uint64(x) >> np.uint64(16)
     x = np.uint32(x & np.uint64(0xffffffff))
     out = (x >> np.uint32(9)) * (1.0 / 2 ** 23)
     return out.astype(np.float32)
 
-
 def uniform32_from_uint32(x):
     return (x >> np.uint32(9)) * (1.0 / 2 ** 23)
-
 
 def uniform32_from_uint(x, bits):
     if bits == 64:
@@ -70,17 +66,14 @@ def uniform32_from_uint(x, bits):
     else:
         raise NotImplementedError
 
-
 def uniform_from_uint(x, bits):
     if bits in (64, 63, 53):
         return uniform_from_uint64(x)
     elif bits == 32:
         return uniform_from_uint32(x)
 
-
 def uniform_from_uint64(x):
     return (x >> np.uint64(11)) * (1.0 / 9007199254740992.0)
-
 
 def uniform_from_uint32(x):
     out = np.empty(len(x) // 2)
@@ -90,10 +83,8 @@ def uniform_from_uint32(x):
         out[i // 2] = (a * 67108864.0 + b) / 9007199254740992.0
     return out
 
-
 def uniform_from_dsfmt(x):
     return x.view(np.double) - 1.0
-
 
 def gauss_from_uint(x, n, bits):
     if bits in (64, 63):
@@ -123,13 +114,13 @@ def gauss_from_uint(x, n, bits):
 class Base(object):
     dtype = np.uint64
     data2 = data1 = {}
+    seed_error_type = TypeError
 
     @classmethod
     def setup_class(cls):
         cls.bit_generator = Xoshiro256
         cls.bits = 64
         cls.dtype = np.uint64
-        cls.seed_error_type = TypeError
         cls.invalid_init_types = []
         cls.invalid_init_values = []
 
@@ -166,12 +157,12 @@ class Base(object):
 
     def test_gauss_inv(self):
         n = 25
-        rs = Generator(self.bit_generator(*self.data1['seed']))
+        rs = RandomState(self.bit_generator(*self.data1['seed']))
         gauss = rs.standard_normal(n)
         assert_allclose(gauss,
                         gauss_from_uint(self.data1['data'], n, self.bits))
 
-        rs = Generator(self.bit_generator(*self.data2['seed']))
+        rs = RandomState(self.bit_generator(*self.data2['seed']))
         gauss = rs.standard_normal(25)
         assert_allclose(gauss,
                         gauss_from_uint(self.data2['data'], n, self.bits))
@@ -311,7 +302,6 @@ class TestXoshiro256(Base):
             join(pwd, './data/xoshiro256-testset-1.csv'))
         cls.data2 = cls._read_csv(
             join(pwd, './data/xoshiro256-testset-2.csv'))
-        cls.seed_error_type = TypeError
         cls.invalid_init_types = [('apple',), (2 + 3j,), (3.1,)]
         cls.invalid_init_values = [(-2,), (np.empty((2, 2), dtype=np.int64),)]
 
@@ -326,7 +316,6 @@ class TestXoshiro512(Base):
             join(pwd, './data/xoshiro512-testset-1.csv'))
         cls.data2 = cls._read_csv(
             join(pwd, './data/xoshiro512-testset-2.csv'))
-        cls.seed_error_type = TypeError
         cls.invalid_init_types = [('apple',), (2 + 3j,), (3.1,)]
         cls.invalid_init_values = [(-2,), (np.empty((2, 2), dtype=np.int64),)]
 
@@ -341,7 +330,6 @@ class TestThreeFry(Base):
             join(pwd, './data/threefry-testset-1.csv'))
         cls.data2 = cls._read_csv(
             join(pwd, './data/threefry-testset-2.csv'))
-        cls.seed_error_type = TypeError
         cls.invalid_init_types = []
         cls.invalid_init_values = [(1, None, 1), (-1,), (2 ** 257 + 1,),
                                    (None, None, 2 ** 257 + 1)]
@@ -364,7 +352,6 @@ class TestPhilox(Base):
             join(pwd, './data/philox-testset-1.csv'))
         cls.data2 = cls._read_csv(
             join(pwd, './data/philox-testset-2.csv'))
-        cls.seed_error_type = TypeError
         cls.invalid_init_types = []
         cls.invalid_init_values = [(1, None, 1), (-1,), (2 ** 257 + 1,),
                                    (None, None, 2 ** 257 + 1)]
@@ -385,13 +372,12 @@ class TestPCG64(Base):
         cls.dtype = np.uint64
         cls.data1 = cls._read_csv(join(pwd, './data/pcg64-testset-1.csv'))
         cls.data2 = cls._read_csv(join(pwd, './data/pcg64-testset-2.csv'))
-        cls.seed_error_type = (ValueError, TypeError)
         cls.invalid_init_types = [(3.2,), ([None],), (1, None)]
         cls.invalid_init_values = [(-1,)]
 
     def test_seed_out_of_range_array(self):
         bg = self.bit_generator([2 ** (2 * self.bits + 1)])
-        assert_raises(self.seed_error_type, self.bit_generator, [-1])
+        assert_raises(ValueError, self.bit_generator, [-1])
 
     def test_advance_symmetry(self):
         rs = Generator(self.bit_generator(*self.data1['seed']))
@@ -416,7 +402,6 @@ class TestPCG32(TestPCG64):
         cls.dtype = np.uint32
         cls.data1 = cls._read_csv(join(pwd, './data/pcg32-testset-1.csv'))
         cls.data2 = cls._read_csv(join(pwd, './data/pcg32-testset-2.csv'))
-        cls.seed_error_type = TypeError
         cls.invalid_init_types = [(np.array([1, 2]), None), (3.2,),
                                   (None, np.zeros(1))]
         cls.invalid_init_values = [(-1,)]
@@ -433,7 +418,6 @@ class TestMT19937(Base):
         cls.dtype = np.uint32
         cls.data1 = cls._read_csv(join(pwd, './data/mt19937-testset-1.csv'))
         cls.data2 = cls._read_csv(join(pwd, './data/mt19937-testset-2.csv'))
-        cls.seed_error_type = ValueError
         cls.invalid_init_types = []
         cls.invalid_init_values = [(-1,), np.array([2 ** 33])]
 
@@ -480,6 +464,13 @@ class TestDSFMT(Base):
         cls.data2 = cls._read_csv(join(pwd, './data/dSFMT-testset-2.csv'))
         cls.seed_error_type = TypeError
         cls.invalid_init_types = []
-        cls.invalid_init_values = [(-1,), np.array([2 ** 33]),
-                                   (np.array([2 ** 33, 2 ** 33]),)]
+        cls.invalid_init_values = [(-1,),]
 
+    def test_uniform_double(self):
+        rs = Generator(self.bit_generator(*self.data1['seed']))
+        assert_array_equal(uniform_from_dsfmt(self.data1['data']),
+                           rs.random(1000))
+
+        rs = Generator(self.bit_generator(*self.data2['seed']))
+        assert_equal(uniform_from_dsfmt(self.data2['data']),
+                     rs.random(1000))

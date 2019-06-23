@@ -154,7 +154,7 @@ cdef class Xoshiro512:
         self.state = state
 
     def __reduce__(self):
-        from ._pickle import __bit_generator_ctor
+        from numpy.random._pickle import __bit_generator_ctor
         return __bit_generator_ctor, (self.state['bit_generator'],), self.state
 
     cdef _reset_state_variables(self):

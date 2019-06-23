@@ -191,7 +191,7 @@ cdef class ThreeFry:
         self.state = state
 
     def __reduce__(self):
-        from ._pickle import __bit_generator_ctor
+        from numpy.random._pickle import __bit_generator_ctor
         return __bit_generator_ctor, (self.state['bit_generator'],), self.state
 
     cdef _reset_state_variables(self):
@@ -416,7 +416,7 @@ cdef class ThreeFry:
 
         cdef np.ndarray delta_a
         delta_a = int_to_array(delta, 'step', 256, 64)
-        threefry_advance(<uint64_t *>delta_a.data, &self.rng_state)
+        threefry_advance(<uint64_t *>np.PyArray_DATA(delta_a), &self.rng_state)
         self._reset_state_variables()
         return self
 

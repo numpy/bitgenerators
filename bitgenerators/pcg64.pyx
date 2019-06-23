@@ -111,7 +111,7 @@ cdef class PCG64(BitGenerator):
         val = self._seed_seq.generate_state(4, np.uint64)
         pcg64_set_seed(&self.rng_state,
                        <uint64_t *>np.PyArray_DATA(val),
-                       <uint64_t *>(np.PyArray_DATA(val) + 2))
+                       (<uint64_t *>np.PyArray_DATA(val)) + 2)
         self._reset_state_variables()
 
     cdef _reset_state_variables(self):
