@@ -7,8 +7,8 @@ from numpy.testing import (assert_equal, assert_allclose, assert_array_equal,
 import pytest
 
 from numpy.random import Generator, RandomState
-from bitgenerators import (MT19937, ThreeFry, PCG32, PCG64, DSFMT,
-                          Philox, Xoshiro256, Xoshiro512)
+from bitgenerators import (MT19937, ThreeFry, PCG32, PCG64, DSFMT, Philox,
+                           Xoshiro256, Xoshiro512, GJrand, JSF64, SFC64)
 
 from numpy.random.common import interface
 

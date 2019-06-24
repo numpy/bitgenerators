@@ -22,6 +22,7 @@ from os.path import (basename, dirname, join, relpath, splitext)
 
 from setuptools import Extension, find_packages, setup
 from numpy.distutils.system_info import platform_bits
+from numpy import get_include
 
 import Cython
 
@@ -149,6 +150,9 @@ elif not is_msvc:
 
 
 extensions = []
+random_dir = join(dirname(dirname(get_include())), 'random')
+include_dirs = ['.', 'src', random_dir]
+
 
 for gen in ['mt19937', 'dsfmt']:
     # gen.pyx, src/gen/gen.c, src/gen/gen-jump.c
@@ -156,19 +160,19 @@ for gen in ['mt19937', 'dsfmt']:
                          sources=['bitgenerators/{0}.pyx'.format(gen),
                                   'src/{0}/{0}.c'.format(gen),
                                   'src/{0}/{0}-jump.c'.format(gen)],
-                         include_dirs=['.', 'src', join('src', gen)],
+                         include_dirs=include_dirs,
                          libraries=EXTRA_LIBRARIES,
                          extra_compile_args=EXTRA_COMPILE_ARGS,
                          depends=['%s.pyx' % gen],
                          define_macros=defs,
                      ))
 for gen in ['philox', 'threefry', 'xoshiro256', 'xoshiro512',
-            'pcg64', 'pcg32']:
+            'pcg64', 'pcg32', 'gjrand', 'sfc64', 'jsf64']:
     # gen.pyx, src/gen/gen.c
     extensions.append(Extension(gen,
                          sources=['bitgenerators/{0}.pyx'.format(gen),
                                   'src/{0}/{0}.c'.format(gen)],
-                         include_dirs=['.', 'src', join('src', gen)],
+                         include_dirs=include_dirs,
                          libraries=EXTRA_LIBRARIES,
                          extra_compile_args=EXTRA_COMPILE_ARGS,
                          depends=['%s.pyx' % gen, 'bit_generator.pyx',
