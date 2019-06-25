@@ -1,4 +1,5 @@
 import operator
+import os
 
 import numpy as np
 cimport numpy as np
@@ -25,7 +26,7 @@ cdef extern from "src/mt19937/mt19937.h":
     void mt19937_init_by_array(mt19937_state *state, uint32_t *init_key, int key_length)
     void mt19937_seed(mt19937_state *state, uint32_t seed)
     void mt19937_jump(mt19937_state *state)
-    
+
     enum:
         RK_STATE_LEN
 
@@ -104,10 +105,9 @@ cdef class MT19937(BitGenerator):
     used in each worker process. All generators should be chained to ensure
     that the segments come from the same sequence.
 
-    >>> from numpy.random.entropy import random_entropy
-    >>> from numpy.random import Generator, MT19937
-    >>> seed = random_entropy()
-    >>> bit_generator = MT19937(seed)
+    >>> from numpy.random import Generator, MT19937, SeedSequence
+    >>> sg = SeedSequence(1234)
+    >>> bit_generator = MT19937(sg)
     >>> rg = []
     >>> for _ in range(10):
     ...    rg.append(Generator(bit_generator))
@@ -134,38 +134,34 @@ cdef class MT19937(BitGenerator):
 
     def __init__(self, seed=None):
         BitGenerator.__init__(self, seed)
-        if isinstance(seed, SeedSequence):
-            val = self._seed_seq.generate_state(RK_STATE_LEN, np.uint32)
-            # MSB is 1; assuring non-zero initial array
-            self.rng_state.key[0] = 0x80000000UL 
-            for i in range(1, RK_STATE_LEN):
-                self.rng_state.key[i] = val[i]
-            self.rng_state.pos = i
-        else:
-            self.legacy_seeding(seed)
+        val = self._seed_seq.generate_state(RK_STATE_LEN, np.uint32)
+        # MSB is 1; assuring non-zero initial array
+        self.rng_state.key[0] = 0x80000000UL
+        for i in range(1, RK_STATE_LEN):
+            self.rng_state.key[i] = val[i]
+        self.rng_state.pos = i
+
         self._bitgen.state = &self.rng_state
         self._bitgen.next_uint64 = &mt19937_uint64
         self._bitgen.next_uint32 = &mt19937_uint32
         self._bitgen.next_double = &mt19937_double
         self._bitgen.next_raw = &mt19937_raw
 
-    def legacy_seeding(self, seed=None):
+    def _legacy_seeding(self, seed):
         """
-        legacy_seeding(seed=None)
+        _legacy_seeding(seed)
 
         Seed the generator in a backward compatible way. For modern
-        applications, MT19937(SeedGenerator(seed)) is preferable.
+        applications, creating a new instance is preferable. Calling this
+        overrides self._seed_seq
 
         Parameters
         ----------
-        seed : {None, int, array_like, SeedSequence}, optional
+        seed : {None, int, array_like}
             Random seed initializing the pseudo-random number generator.
             Can be an integer in [0, 2**32-1], array of integers in
-            [0, 2**32-1], a `SeedSequence, or ``None`` (the default). If `seed`
-            is ``None``, then ``MT19937`` will try to read entropy from
-            ``/dev/urandom`` (or the Windows equivalent) if available to
-            produce a 32-bit seed. If unavailable, a 32-bit hash of the time
-            and process ID is used.
+            [0, 2**32-1], a `SeedSequence, or ``None``. If `seed`
+            is ``None``, then sample entropy for a seed.
 
         Raises
         ------
@@ -176,11 +172,11 @@ cdef class MT19937(BitGenerator):
         with self.lock:
             try:
                 if seed is None:
-                    try:
-                        seed = random_entropy(1)
-                    except RuntimeError:
-                        seed = random_entropy(1, 'fallback')
-                    mt19937_seed(&self.rng_state, seed[0])
+                    val = np.frombuffer(os.urandom(RK_STATE_LEN * 4), dtype=np.uint32)
+                    # MSB is 1; assuring non-zero initial array
+                    self.rng_state.key[0] = 0x80000000UL
+                    for i in range(1, RK_STATE_LEN):
+                        self.rng_state.key[i] = val[i]
                 else:
                     if hasattr(seed, 'squeeze'):
                         seed = seed.squeeze()
@@ -199,7 +195,8 @@ cdef class MT19937(BitGenerator):
                     raise ValueError("Seed must be between 0 and 2**32 - 1")
                 obj = obj.astype(np.uint32, casting='unsafe', order='C')
                 mt19937_init_by_array(&self.rng_state,
-                        <uint32_t*>np.PyArray_DATA(obj), np.PyArray_DIM(obj, 0))
+                         <uint32_t*>np.PyArray_DATA(obj), np.PyArray_DIM(obj, 0))
+        self._seed_seq = None
 
     cdef jump_inplace(self, iter):
         """

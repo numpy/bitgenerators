@@ -353,8 +353,7 @@ class TestPhilox(Base):
         cls.data2 = cls._read_csv(
             join(pwd, './data/philox-testset-2.csv'))
         cls.invalid_init_types = []
-        cls.invalid_init_values = [(1, None, 1), (-1,), (2 ** 257 + 1,),
-                                   (None, None, 2 ** 257 + 1)]
+        cls.invalid_init_values = [(1, None, 1), (-1,), (None, None, 2 ** 257 + 1)]
 
     def test_set_key(self):
         bit_generator = self.bit_generator(*self.data1['seed'])
@@ -419,24 +418,7 @@ class TestMT19937(Base):
         cls.data1 = cls._read_csv(join(pwd, './data/mt19937-testset-1.csv'))
         cls.data2 = cls._read_csv(join(pwd, './data/mt19937-testset-2.csv'))
         cls.invalid_init_types = []
-        cls.invalid_init_values = [(-1,), np.array([2 ** 33])]
-
-    def test_seed_out_of_range(self):
-        assert_raises(ValueError, self.bit_generator, 2 ** (self.bits + 1))
-        assert_raises(ValueError, self.bit_generator, -1)
-        assert_raises(ValueError, self.bit_generator,
-                      2 ** (2 * self.bits + 1))
-
-    def test_seed_out_of_range_array(self):
-        assert_raises(ValueError, self.bit_generator,
-                      [2 ** (self.bits + 1)])
-        assert_raises(ValueError, self.bit_generator, [-1])
-        assert_raises(TypeError, self.bit_generator,
-                      [2 ** (2 * self.bits + 1)])
-
-    def test_seed_float(self):
-        assert_raises(TypeError, self.bit_generator, np.pi)
-        assert_raises(TypeError, self.bit_generator, -np.pi)
+        cls.invalid_init_values = [(-1,)]
 
     def test_state_tuple(self):
         rs = Generator(self.bit_generator(*self.data1['seed']))
