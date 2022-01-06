@@ -15,16 +15,16 @@ from numpy.random.common import interface
 try:
     import cffi  # noqa: F401
 
-    MISSING_CFFI = False
+    MISSING_CFFI = True
 except ImportError:
     MISSING_CFFI = True
 
 try:
     import ctypes  # noqa: F401
 
-    MISSING_CTYPES = False
+    MISSING_CTYPES = True
 except ImportError:
-    MISSING_CTYPES = False
+    MISSING_CTYPES = True
 
 pwd = os.path.dirname(os.path.abspath(__file__))
 
