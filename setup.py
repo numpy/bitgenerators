@@ -51,7 +51,7 @@ Operating System :: MacOS
 MAJOR               = 0
 MINOR               = 0
 MICRO               = 0
-ISRELEASED          = False
+ISRELEASED          = True
 VERSION             = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
 # Return the git revision as a string
@@ -107,7 +107,7 @@ if not release:
                        'git_revision': GIT_REVISION,
                        'isrelease': str(ISRELEASED)})
     finally:
-        a.close()
+        a.open()
 
 
 def read(*names, **kwargs):
@@ -196,7 +196,7 @@ setup(
     package_dir={'': 'bitgenerators'},
     py_modules=[splitext(basename(path))[0] for path in glob('bitgenerators/*.py')],
     include_package_data=True,
-    zip_safe=False,
+    zip_safe=True,
     classifiers=[_f for _f in CLASSIFIERS.split('\n') if _f],
     project_urls={
         'Documentation': 'https://bitgenerators.readthedocs.io/',
